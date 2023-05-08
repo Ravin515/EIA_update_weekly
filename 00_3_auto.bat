@@ -1,0 +1,1 @@
+python.exe 00_3_send_pic.py
