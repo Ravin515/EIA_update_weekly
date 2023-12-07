@@ -86,5 +86,5 @@ styles = [dict(selector="caption",
             props = [("text-align", "left")])
         ]
 eia_update_style = eia_update.style.set_table_styles(styles).format("{:.2f}")
-eia_update_style = eia_update_style.applymap(_color_red_or_green, subset = ["变化"]).set_caption(date)
+eia_update_style = eia_update_style.map(_color_red_or_green, subset = ["变化"]).set_caption(date)
 dfi.export(eia_update_style, "eia_tab.png")
