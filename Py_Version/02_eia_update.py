@@ -8,7 +8,7 @@ eia_update = pd.read_csv("https://ir.eia.gov/wpsr/table9.csv", encoding = "cp125
 date = "EIA周度数据 " + datetime.strptime(eia_update.columns[2], "%m/%d/%y").date().strftime("%Y-%m-%d")
 eia_update = eia_update.iloc[:, :4].rename(columns = {eia_update.columns[2]:'本期',eia_update.columns[3]:'上期'})
 eia_update.iloc[:, 2:4] = eia_update.iloc[:, 2:4].apply(lambda x: x.str.replace(",", ""))
-eia_update = eia_update.replace("–", np.nan)
+eia_update = eia_update.replace("–", np.nan).replace("– –", np.nan)
 eia_update.iloc[:, 2:4] = eia_update[eia_update.columns[2:4]].apply(lambda x: x.astype(float))
 eia_update["变化"] = eia_update["本期"] - eia_update["上期"]
 # eia_update["variable"] = pd.to_datetime(eia_update['variable'])

@@ -4,7 +4,7 @@ import datetime
 
 # 历史数据
 eia_history = pd.read_csv("eia_weekly.csv", encoding = "utf-8")
-eia_history = eia_history.drop(columns = ["Unnamed: 0"])
+eia_history = eia_history.drop(columns = ["Unnamed: 0"]).drop_duplicates()
 
 # 新增数据
 def read_eia_csv(self):
@@ -69,7 +69,7 @@ eia_update["sub_title"] = np.where(
         )
     )
 ) 
-eia_new = pd.concat([eia_update, eia_history], sort = True).drop_duplicates().sort_values(by = ["name", "variable", "sub_title"]).reset_index(drop = True)
+eia_new = pd.concat([eia_update, eia_history], sort = True).drop_duplicates().sort_values(by = [ "sub_title", "name", "variable"]).reset_index(drop = True)
 eia_new.to_csv("eia_weekly.csv")
 
 # eia_new = eia_new[eia_new["name"].isnull()]
@@ -89,34 +89,91 @@ eia_new["y_min"] = eia_new["y_min"].astype("float")
 eia_new["value"] = eia_new["value"].astype("float")
 eia_new["week"] = eia_new["week"].astype("string")
 eia_new = eia_new.reset_index(drop = True)
+eia_new = eia_new.replace([np.inf, -np.inf], np.nan)
 
 import seaborn as sns
-import seaborn.objects as so
+import matplotlib.pyplot as plt
+import datetime
+# import seaborn.objects as so
 
 # 画图
 sns.set(font="SimHei")
-custom_palette = sns.color_palette("Paired", 9)
+sns.color_palette()
+# =============================================================================
+# # seaborn oject module
+# custom_palette = sns.color_palette("Paired", 9)
+# 
+# eia_new["label"] = eia_new["STUB_2"] + " - " + eia_new["STUB_1"]
+# eia_new["label"] = eia_new["label"].str.replace("Finished Motor Gasoline", "Total Motor Gasoline")
+# eia_new = eia_new.sort_values(by = ["sub_title", "name"])
+# 
+# p = (
+#     so.Plot(eia_new, x="week", y = "value", ymin="y_min", ymax="y_max")
+#     .add(so.Band(color = "#feb8cd"))
+#     .add(so.Line(), color = "year")
+#     .add(so.Dot(), color = "year")
+#     .layout(size = (120, 60))
+#     .facet("label", wrap = 5)
+#     .share(y = False)
+#     .label(title = "{}".format)
+#     .save("eia_pic.png")
+#     # .label(title = n.format())
+# )
+# 
+# =============================================================================
 
-eia_new["label"] = eia_new["STUB_2"] + " - " + eia_new["STUB_1"]
-eia_new["label"] = eia_new["label"].str.replace("Finished Motor Gasoline", "Total Motor Gasoline")
-eia_new = eia_new.sort_values(by = ["sub_title", "name"])
+# seaborn base object
+eia_new = eia_new[eia_new["year"] >= datetime.date.today().year - 3]
+names = eia_new["name"].unique().tolist()
 
-p = (
-    so.Plot(eia_new, x="week", y = "value", ymin="y_min", ymax="y_max")
-    .add(so.Band(color = "#feb8cd"))
-    .add(so.Line(), color = "year")
-    .add(so.Dot(), color = "year")
-    .layout(size = (120, 60))
-    .facet("label", wrap = 5)
-    .share(y = False)
-    .label(title = "{}".format)
-    .save("eia_pic.png")
-    # .label(title = n.format())
-)
+f, axs = plt.subplots(6, 5, figsize=(60, 30))
+
+axs = axs.flatten()
+for ax, name in zip(axs, names):
+    eia = eia_new[(eia_new["name"] == name)]
+    sns.lineplot(ax = ax, x = eia["week"].astype("int64"), 
+                 y = 'value', 
+                 hue = eia["year"].astype("category"), 
+                 units = "year", 
+                 data = eia,
+                 palette = sns.color_palette("tab10")) # 画季节性图
+    
+    sns.lineplot(x = eia["week"].astype("int64"), 
+                  y = "y_min",
+                  data = eia, 
+                  color = "grey", 
+                  alpha = 0,
+                  ax = ax)
+    
+    sns.lineplot(x = eia["week"].astype("int64"), 
+                  y = "y_max",
+                  data = eia, 
+                  color = "grey", 
+                  alpha = 0,
+                  ax = ax)
+    
+    ax.fill_between(x = eia[["week", "y_min", "y_max"]].drop_duplicates()["week"].astype("int64"),
+                      y1 = eia[["week", "y_min", "y_max"]].drop_duplicates()['y_min'],
+                      y2 = eia[["week", "y_min", "y_max"]].drop_duplicates()['y_max'],
+                      alpha = 0.3,
+                      facecolor = 'grey',
+                      label = "5-year Range")
+    
+    ax.legend(loc='upper center', 
+              bbox_to_anchor=(0.5, -0.12),
+              fancybox=True, 
+              shadow=True, 
+              ncol=5)
+    ax.set_title(name, fontsize = 20)
+    ax.set(xlabel = "周数")
+    ax.set(ylabel = None)
+    
+f.tight_layout()
+f.savefig('eia_pic.png', dpi=100)
 
 from PIL import Image
 eia_tab = Image.open("eia_tab.png")
-eia_tab = eia_tab.resize((3074, 5760))
+eia_tab = eia_tab.resize((1600, 3000))
 # eia_tab.show()
 eia_pic = Image.open("eia_pic.png")
 # eia_pic.show()
