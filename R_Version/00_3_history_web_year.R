@@ -7,22 +7,24 @@ fread_sleep <- function(x, ...){
   Sys.sleep(5)
   fread(x, ...)
 }
-# 1. Retrive last 6-year data: table9.csv and save the list data
-eia_web <- data.table(
-  url_part =  
-    html_nodes(
-      urlpage, 
-      xpath = '//div[@class="main_col"]//a'
+# 1. Retrive last 1-year data: table9.csv and save the list data
+eia_web_update <- 
+  data.table(
+      url_part =  
+          html_nodes(
+          urlpage, 
+          xpath = '//div[@class="main_col"]//a'
       ) |> 
-    html_attr("href")
+      html_attr("href")
   )
-eia_web <- eia_web[
+eia_web_update <- 
+  eia_web_update[
     !is.na(url_part), 
     .SD[-1]
   ][, 
     url_part := 
       str_replace(
-        url_part, "/wpsr(.+)php", ""
+      url_part, "/wpsr(.+)php", ""
       )
   ][, 
     url_part := 
@@ -34,7 +36,7 @@ eia_web <- eia_web[
   ][
     str_detect(
       url_part, 
-      paste((year(Sys.Date())-5):year(Sys.Date()), 
+      paste((year(Sys.Date())-1):year(Sys.Date()), 
         collapse = "|")
     ), 
     .SD
@@ -47,6 +49,10 @@ eia_web <- eia_web[
       list()), 
     by = .(url_part)
   ]
+
+load("./data/eia_web_history.Rdata")
+
+eia_web <- rbindlist(list(eia_web, eia_web_update)) |> unique()
 
 save(
   eia_web, 

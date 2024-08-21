@@ -1,1 +1,1 @@
-Rscript 00_2_update_web.r
+Rscript 00_2_update_web.R

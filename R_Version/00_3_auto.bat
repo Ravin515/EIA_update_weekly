@@ -1,1 +1,1 @@
-python.exe 00_3_send_pic.py
+Rscript 00_3_history_web_year.R
