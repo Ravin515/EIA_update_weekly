@@ -286,10 +286,10 @@ def pic_update():
 # 6. bind eia_tab and eia_pic
 def tab_pic_combine():
     from PIL import Image
-    eia_tab = Image.open("eia_tab.png")
+    eia_tab = Image.open("./pic/eia_tab.png")
     eia_tab = eia_tab.resize((1600, 3000))
     # eia_tab.show()
-    eia_pic = Image.open("eia_pic.png")
+    eia_pic = Image.open("./pic/eia_pic.png")
     # eia_pic.show()
     eia = Image.new('RGB', 
                     (eia_tab.size[0] + eia_pic.size[0], 
